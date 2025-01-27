@@ -6,7 +6,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface, TransferChecked},
 };
 
-declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
+declare_id!("9UBYdV3DupVi18V39iBDXNYzANSUryKnNCbiBjEnhQLk");
 
 #[program]
 pub mod tokenvesting {
@@ -49,7 +49,7 @@ pub mod tokenvesting {
         Ok(())
     }
 
-    pub fn claim_tokens(ctx: Context<ClaimToken>, company_name: String) -> Result<()> {
+    pub fn claim_tokens(ctx: Context<ClaimToken>, _company_name: String) -> Result<()> {
         let employee_account = &mut ctx.accounts.employee_account;
         let now = Clock::get()?.unix_timestamp;
 
@@ -87,7 +87,7 @@ pub mod tokenvesting {
         let transfer_cpi_account = TransferChecked {
             from: ctx.accounts.treasure_token_account.to_account_info(),
             mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.employee_account.to_account_info(),
+            to: ctx.accounts.employee_token_account.to_account_info(),
             authority: ctx.accounts.treasure_token_account.to_account_info(),
         };
 
@@ -102,6 +102,8 @@ pub mod tokenvesting {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, transfer_cpi_account, signer_seeds);
 
         token_interface::transfer_checked(cpi_ctx, claimable_amount, ctx.accounts.mint.decimals)?;
+
+        employee_account.total_withdraw += claimable_amount;
 
         Ok(())
     }

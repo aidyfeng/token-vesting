@@ -1,14 +1,20 @@
 'use client'
 
 import { getTokenvestingProgram, getTokenvestingProgramId } from '@project/anchor'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Cluster, Keypair, PublicKey } from '@solana/web3.js'
+import { Cluster, PublicKey } from '@solana/web3.js'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
+
+interface CreateVestingArgs{
+  companyName :string;
+  mint:string;
+}
 
 export function useTokenvestingProgram() {
   const { connection } = useConnection()
@@ -20,7 +26,7 @@ export function useTokenvestingProgram() {
 
   const accounts = useQuery({
     queryKey: ['tokenvesting', 'all', { cluster }],
-    queryFn: () => program.account.tokenvesting.all(),
+    queryFn: () => program.account.vestingAccount.all(),
   })
 
   const getProgramAccount = useQuery({
@@ -28,15 +34,18 @@ export function useTokenvestingProgram() {
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
-  const initialize = useMutation({
-    mutationKey: ['tokenvesting', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ tokenvesting: keypair.publicKey }).signers([keypair]).rpc(),
+  const createVestingAccount = useMutation<String,Error,CreateVestingArgs>({
+    mutationKey: ['vestingAccount', 'create', { cluster }],
+    mutationFn: ({companyName,mint}) =>
+      program.methods.createVestingAccount(companyName)
+    .accounts({ mint: new PublicKey(mint),tokenProgram:TOKEN_PROGRAM_ID })
+    // .signers([keypair])
+    .rpc(),
     onSuccess: (signature) => {
       transactionToast(signature)
       return accounts.refetch()
     },
-    onError: () => toast.error('Failed to initialize account'),
+    onError: () => toast.error('Failed to create vesting account'),
   })
 
   return {
