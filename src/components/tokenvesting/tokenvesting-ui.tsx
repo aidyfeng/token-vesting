@@ -1,22 +1,55 @@
 'use client'
 
-import { Keypair, PublicKey } from '@solana/web3.js'
-import { useMemo } from 'react'
-import { ellipsify } from '../ui/ui-layout'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey } from '@solana/web3.js'
+import { useMemo, useState } from 'react'
 import { ExplorerLink } from '../cluster/cluster-ui'
+import { ellipsify } from '../ui/ui-layout'
 import { useTokenvestingProgram, useTokenvestingProgramAccount } from './tokenvesting-data-access'
 
 export function TokenvestingCreate() {
-  const { initialize } = useTokenvestingProgram()
+  const { createVestingAccount } = useTokenvestingProgram()
+  const [company, setCompany] = useState("");
+  const [mint, setMint] = useState("");
+  const { publicKey } = useWallet();
+
+  const isFormValid = company.length >0 && mint.length>0;
+
+  const handleSumit = () => {
+    if(publicKey && isFormValid){
+      createVestingAccount.mutateAsync({companyName:company,mint:mint})
+    }
+  };
+
+  if(!publicKey){
+    return <p>Connect your wallet</p>
+  }
 
   return (
-    <button
-      className="btn btn-xs lg:btn-md btn-primary"
-      onClick={() => initialize.mutateAsync(Keypair.generate())}
-      disabled={initialize.isPending}
-    >
-      Create {initialize.isPending && '...'}
-    </button>
+    <div>
+      <input 
+        type = "text"
+        placeholder="Company name"
+        value = {company}
+        onChange={(e) => setCompany(e.target.value)}
+        className='input input-bordered w-full max-w-ws'
+      />
+      <input 
+        type = "text"
+        placeholder="Mint address"
+        value = {mint}
+        onChange={(e) => setMint(e.target.value)}
+        className='input input-bordered w-full max-w-ws'
+        />
+      <button
+        className="btn btn-xs lg:btn-md btn-primary"
+        onClick={handleSumit}
+        disabled={createVestingAccount.isPending || !isFormValid}
+      >
+        Create {createVestingAccount.isPending && '...'}
+      </button>
+    </div>
+
   )
 }
 

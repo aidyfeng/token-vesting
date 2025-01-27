@@ -23,7 +23,8 @@
     "paths": {
       "@project/anchor": ["anchor/src"],
       "@/*": ["./src/*"]
-    }
+    },
+    "target": "ESNext"
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.spec.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
