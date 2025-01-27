@@ -3,8 +3,6 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { useMemo, useState } from 'react'
-import { ExplorerLink } from '../cluster/cluster-ui'
-import { ellipsify } from '../ui/ui-layout'
 import { useTokenvestingProgram, useTokenvestingProgramAccount } from './tokenvesting-data-access'
 
 export function TokenvestingCreate() {
@@ -87,11 +85,18 @@ export function TokenvestingList() {
 }
 
 function TokenvestingCard({ account }: { account: PublicKey }) {
-  const { accountQuery, incrementMutation, setMutation, decrementMutation, closeMutation } = useTokenvestingProgramAccount({
+  const { accountQuery, createEmployeeAccount } 
+  = useTokenvestingProgramAccount({
     account,
   })
 
-  const count = useMemo(() => accountQuery.data?.count ?? 0, [accountQuery.data?.count])
+  const [startTime,setStartTime] = useState(0);
+  const [endTime,setEndTime] = useState(0);
+  const [totalAmount,setTotalAmount] = useState(0);
+  const [cliffTime,setCliffTime] = useState(0);
+  const [beneficiary,setBeneficialry] = useState('');
+
+  const companyName = useMemo(() => accountQuery.data?.companyName ?? 0, [accountQuery.data?.companyName])
 
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
@@ -100,53 +105,59 @@ function TokenvestingCard({ account }: { account: PublicKey }) {
       <div className="card-body items-center text-center">
         <div className="space-y-6">
           <h2 className="card-title justify-center text-3xl cursor-pointer" onClick={() => accountQuery.refetch()}>
-            {count}
+            {companyName}
           </h2>
           <div className="card-actions justify-around">
+            <input 
+              type = "text"
+              placeholder="Start Time"
+              value = {startTime || ''}
+              onChange={(e) => setStartTime(parseInt(e.target.value))}
+              className='input input-bordered w-full max-w-ws'
+            />
+            <input 
+              type = "text"
+              placeholder="End Time"
+              value = {endTime || ''}
+              onChange={(e) => setEndTime(parseInt(e.target.value))}
+              className='input input-bordered w-full max-w-ws'
+            />
+            <input 
+              type = "text"
+              placeholder="Total Allocation"
+              value = {startTime || ''}
+              onChange={(e) => setTotalAmount(parseInt(e.target.value))}
+              className='input input-bordered w-full max-w-ws'
+            />
+            <input 
+              type = "text"
+              placeholder="Cliff Time"
+              value = {startTime || ''}
+              onChange={(e) => setCliffTime(parseInt(e.target.value))}
+              className='input input-bordered w-full max-w-ws'
+            />
+            <input 
+              type = "text"
+              placeholder="Beneficiary Wallet Address"
+              value = {beneficiary || ''}
+              onChange={(e) => setBeneficialry(e.target.value)}
+              className='input input-bordered w-full max-w-ws'
+            />
             <button
               className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => incrementMutation.mutateAsync()}
-              disabled={incrementMutation.isPending}
+              onClick={() => createEmployeeAccount.mutateAsync({
+                startTime,
+                endTime,
+                totalAmount,
+                cliffTime,
+                beneficiary
+              }
+              )}
+              disabled={createEmployeeAccount.isPending}
             >
-              Increment
+              Create Employee Vesting Account
             </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => {
-                const value = window.prompt('Set value to:', count.toString() ?? '0')
-                if (!value || parseInt(value) === count || isNaN(parseInt(value))) {
-                  return
-                }
-                return setMutation.mutateAsync(parseInt(value))
-              }}
-              disabled={setMutation.isPending}
-            >
-              Set
-            </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => decrementMutation.mutateAsync()}
-              disabled={decrementMutation.isPending}
-            >
-              Decrement
-            </button>
-          </div>
-          <div className="text-center space-y-4">
-            <p>
-              <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
-            </p>
-            <button
-              className="btn btn-xs btn-secondary btn-outline"
-              onClick={() => {
-                if (!window.confirm('Are you sure you want to close this account?')) {
-                  return
-                }
-                return closeMutation.mutateAsync()
-              }}
-              disabled={closeMutation.isPending}
-            >
-              Close
-            </button>
+          
           </div>
         </div>
       </div>
