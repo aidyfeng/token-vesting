@@ -25,6 +25,11 @@ interface CreateEmployeeArgs{
   beneficiary:string;
 }
 
+interface CreateVestingArgs{
+  companyName :string;
+  mint:string;
+}
+
 export function useTokenvestingProgram() {
   const { connection } = useConnection()
   const { cluster } = useCluster()
